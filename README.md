@@ -97,10 +97,9 @@ python3 code/train_evaluate.py \
 Spectral NFST with two MaxST sub-manifolds per known class:
 
 ```bash
-python3 code/train_evaluate.py \
-    --dataset BoT_IoT --model SpectralNFST --kernel rbf \
-    --components-per-class 2 --scaler QuantileTransformer --poly -1 \
-    --output results/runs/spectral_nfst.csv
+python3 code/run_spectral_nfst_classification.py \
+    --kernel rbf --components-per-class 2 \
+    --scaler QuantileTransformer --poly -1
 ```
 
 The library estimator accepts a scalar, a class-ordered sequence, or a mapping
@@ -112,6 +111,25 @@ anomaly score.
 See [SPECTRAL_NFST_README.md](SPECTRAL_NFST_README.md) for the five algorithm
 phases, metric definitions, memory guidance, and commands for all ten registered
 dataset variants.
+
+For a beginner-friendly Windows workflow, including resumable parameter grids,
+Excel-lock protection, and a one-command result viewer, see
+[HUONG_DAN_CHAY_SPECTRAL_NFST.md](HUONG_DAN_CHAY_SPECTRAL_NFST.md).
+
+Classification and multi-novelty testing now have separate terminal entry points:
+
+```bash
+# Closed-set classification on all ten registered variants
+python3 code/run_spectral_nfst_classification.py --samples-per-class 100
+
+# First inspect valid labels, then hold one or more out of training
+python3 code/run_spectral_nfst_novelty.py --dataset BoT_IoT --limit 1000 --list-classes
+python3 code/run_spectral_nfst_novelty.py --dataset BoT_IoT --limit 1000 \
+    --unknown-labels theft scan --threshold 0.25 --samples-per-class 100
+```
+
+The old `code/run_spectral_nfst.py` command remains as a backward-compatible
+alias for the classification CLI.
 
 Parallel orchestrator (reproduces a preset grid):
 

@@ -1,0 +1,7 @@
+Data Type,Poly,Kernel,SCALER,Model,MCC,NDR,AUC_N,ACC,TPR Macro,FPR,PPV Macro,F1 Macro,AUC,CLS Report,CFS Matrix,Training time,Test time
+BoT_IoT_1000,-1,laplacian,StandardScaler,SpectralNFST-Q5,0.9900825103139325,-1,-1,99.72222222222223,99.16666666666667,0.16666666666666669,99.20634920634922,99.16614550760893,-1.0,,"[[20  0  0  0  0  0]
+ [ 0 19  1  0  0  0]
+ [ 0  0 20  0  0  0]
+ [ 0  0  0 20  0  0]
+ [ 0  0  0  0 20  0]
+ [ 0  0  0  0  0 20]]",0.2721424102783203,0.0

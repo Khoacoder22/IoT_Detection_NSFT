@@ -314,7 +314,7 @@ def _component_counts(n_components, classes: np.ndarray, y: np.ndarray) -> np.nd
 
 
 def _maxst_components(affinity: np.ndarray, n_components: int) -> np.ndarray:
-    """Split a complete affinity graph by cutting the weakest MaxST edges.
+    """Paper Phase 2: split one class graph by cutting weak MaxST edges.
 
     Component IDs are made deterministic by ordering components according to their
     smallest local sample index.
@@ -328,6 +328,7 @@ def _maxst_components(affinity: np.ndarray, n_components: int) -> np.ndarray:
     if not np.all(np.isfinite(affinity)):
         raise ValueError("Kernel affinity graph contains NaN or infinite values")
 
+    # Phase 2.1 - Convert similarity maximization into distance minimization.
     # A maximum spanning tree of affinities is a minimum spanning tree of these
     # shifted distances. A positive floor keeps maximum-affinity off-diagonal
     # edges from being interpreted as absent sparse-graph entries.
@@ -338,6 +339,7 @@ def _maxst_components(affinity: np.ndarray, n_components: int) -> np.ndarray:
     distances[off_diagonal] += np.finfo(np.float64).eps * scale
     np.fill_diagonal(distances, 0.0)
 
+    # Phase 2.2 - Extract the MaxST topological skeleton of this class.
     tree = minimum_spanning_tree(csr_matrix(distances)).tocoo()
     if tree.nnz != n - 1:
         raise RuntimeError("Could not construct a spanning tree for a class affinity graph")
@@ -346,8 +348,8 @@ def _maxst_components(affinity: np.ndarray, n_components: int) -> np.ndarray:
         (int(i), int(j), float(affinity[int(i), int(j)]))
         for i, j in zip(tree.row, tree.col)
     ]
-    # The first Q-1 entries are the weakest similarity links to remove. Endpoint
-    # keys make ties reproducible.
+    # Phase 2.3 - Remove the Q_j-1 weakest-similarity edges from the MaxST.
+    # Endpoint keys make equal-weight cuts reproducible.
     edges.sort(key=lambda edge: (edge[2], min(edge[0], edge[1]), max(edge[0], edge[1])))
     kept = edges[n_components - 1:]
     if kept:
@@ -360,6 +362,7 @@ def _maxst_components(affinity: np.ndarray, n_components: int) -> np.ndarray:
     else:
         graph = csr_matrix((n, n))
 
+    # Phase 2.4 - The remaining connected components are the Q_j sub-manifolds.
     found, labels = connected_components(graph, directed=False)
     if found != n_components:
         raise RuntimeError(f"Expected {n_components} MaxST components, found {found}")
@@ -380,6 +383,13 @@ class SpectralNFST:
     ``n_components`` may be one integer applied to every class, a sequence in
     sorted ``classes_`` order, or a mapping from original class labels to counts.
     Set a count greater than one to activate the proposed manifold decomposition.
+
+    The implementation follows Algorithm 1 in five explicit phases:
+      1. Kernel similarity mapping.
+      2. Per-class MaxST manifold partitioning.
+      3. Global component relabeling.
+      4. Normalized indicator-matrix construction.
+      5. Null-space projection and component-centroid computation.
     """
 
     def __init__(
@@ -411,6 +421,10 @@ class SpectralNFST:
         return self._gamma_used
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "SpectralNFST":
+        # ---------------------------------------------------------------------
+        # SETUP - Validate samples, labels, kernel, and requested Q_j values.
+        # This block is input preparation, not one of the paper's five phases.
+        # ---------------------------------------------------------------------
         X = np.asarray(X, dtype=np.float64)
         y = np.asarray(y)
         if X.ndim != 2 or y.ndim != 1 or X.shape[0] != y.shape[0]:
@@ -430,20 +444,47 @@ class SpectralNFST:
         if total_components - 1 >= X.shape[0]:
             raise ValueError("The total number of components must not exceed the sample count")
 
+        # ---------------------------------------------------------------------
+        # PHASE 1 - KERNEL SIMILARITY MAPPING (Algorithm 1, line 1)
+        # Build K in R^(n x n), K[u,v] = k(x_u, x_v). Column K[:,i] is the
+        # explicit similarity-space representation z_i of training sample i.
+        # Symmetrization removes insignificant floating-point asymmetry.
+        # ---------------------------------------------------------------------
         self.X_train_ = X.copy()
         gamma = self._resolve_gamma(X)
         K = compute_kernel(X, kernel=self.kernel, gamma=gamma)
         K = np.asarray((K + K.T) * 0.5, dtype=np.float64)
 
-        component_indices: list[np.ndarray] = []
-        component_labels: list = []
-        component_ids = np.empty(len(y), dtype=int)
-        next_component = 0
+        # ---------------------------------------------------------------------
+        # PHASE 2 - TARGETED MANIFOLD DECOMPOSITION (Algorithm 1, lines 2-5)
+        # For each original class j:
+        #   a. use its K submatrix as a complete affinity graph G^(j),
+        #   b. compute a maximum spanning tree (MaxST),
+        #   c. remove the Q_j-1 weakest MaxST edges,
+        #   d. retain exactly Q_j connected sub-manifolds.
+        # Local IDs start again from zero inside every original class.
+        # ---------------------------------------------------------------------
+        class_partitions: list[tuple[object, np.ndarray, np.ndarray, int]] = []
         for class_label, target_count in zip(self.classes_, counts):
             class_indices = np.flatnonzero(y == class_label)
             local_affinity = K[np.ix_(class_indices, class_indices)]
             local_ids = _maxst_components(local_affinity, int(target_count))
-            for local_component in range(int(target_count)):
+            class_partitions.append(
+                (class_label, class_indices, local_ids, int(target_count))
+            )
+
+        # ---------------------------------------------------------------------
+        # PHASE 3 - GLOBAL COMPONENT RELABELING (Algorithm 1, lines 6-7)
+        # Convert per-class local component IDs into global IDs 0,...,Q-1.
+        # component_labels_[k] remembers the original class L(k), which lets
+        # inference convert the nearest sub-manifold back to a class prediction.
+        # ---------------------------------------------------------------------
+        component_indices: list[np.ndarray] = []
+        component_labels: list = []
+        component_ids = np.empty(len(y), dtype=int)
+        next_component = 0
+        for class_label, class_indices, local_ids, target_count in class_partitions:
+            for local_component in range(target_count):
                 members = class_indices[local_ids == local_component]
                 component_indices.append(members)
                 component_labels.append(class_label)
@@ -455,12 +496,23 @@ class SpectralNFST:
         self.component_ids_ = component_ids
         self.component_counts_ = counts
 
+        # ---------------------------------------------------------------------
+        # PHASE 4 - NORMALIZED INDICATOR MATRIX H (Algorithm 1, line 8)
+        # H has shape n x Q and orthonormal component columns:
+        # H[i,k] = 1/sqrt(|C_k|) when sample i belongs to component C_k,
+        #          0 otherwise.
+        # Therefore H.T @ H = I_Q and H @ H.T averages values within components.
+        # ---------------------------------------------------------------------
         H = np.zeros((len(y), total_components), dtype=np.float64)
         for component, members in enumerate(component_indices):
             H[members, component] = 1.0 / np.sqrt(len(members))
 
-        # V is an orthonormal basis for the range of the centered similarity
-        # profiles z_i - mean(z), i.e. the centered columns of K.
+        # ---------------------------------------------------------------------
+        # PHASE 5A - BASIS OF THE CENTERED KERNEL RANGE (Algorithm 1, line 11)
+        # Center the similarity profiles z_i and use SVD to obtain V, an
+        # orthonormal basis for range(centered K). Keeping Theta inside this
+        # range preserves positive total-scatter variance as required by NFST.
+        # ---------------------------------------------------------------------
         centered_K = K - K.mean(axis=1, keepdims=True)
         U, singular_values, _ = svd(centered_K, full_matrices=False)
         default_tol = (
@@ -479,8 +531,12 @@ class SpectralNFST:
             )
         V = U[:, :rank]
 
-        # V.T Sw V with Sw = K(I-HH.T)K. The residual factorization is both
-        # more stable and avoids materializing either n-by-n scatter matrix.
+        # ---------------------------------------------------------------------
+        # PHASE 5B - NULL-SPACE PROJECTION (Algorithm 1, lines 9-13)
+        # The paper defines Sw = K(I-HH.T)K. Instead of materializing Sw, use
+        # R = (I-HH.T)KV, so V.T Sw V = R.T R. The Q-1 smallest eigenvectors
+        # approximate the null space; Theta = V @ alpha is the final projection.
+        # ---------------------------------------------------------------------
         KV = K @ V
         residual = KV - H @ (H.T @ KV)
         projected_sw = residual.T @ residual
@@ -492,8 +548,12 @@ class SpectralNFST:
         self.proj_ = np.asarray(V @ alpha, dtype=np.float64)
         self.within_eigenvalues_ = np.asarray(eigenvalues, dtype=np.float64)
 
-        # Each z_i is column i of K. Project the mean similarity profile of
-        # every discovered component, exactly as Algorithm 1 line 14.
+        # ---------------------------------------------------------------------
+        # PHASE 5C - PROJECTED COMPONENT CENTROIDS (Algorithm 1, line 14)
+        # Each z_i is column i of K. For every component C_k, first compute its
+        # mean similarity profile mu_k^sim, then m_k = Theta.T @ mu_k^sim.
+        # These m_k centroids are the manifold reference points at inference.
+        # ---------------------------------------------------------------------
         similarity_means = np.column_stack(
             [K[:, members].mean(axis=1) for members in component_indices]
         )
@@ -505,7 +565,7 @@ class SpectralNFST:
             raise RuntimeError("SpectralNFST must be fitted before prediction")
 
     def transform(self, X: np.ndarray) -> np.ndarray:
-        """Embed samples into the learned Q-1 dimensional null space."""
+        """Inference step 1: kernel-map and embed samples as y=Theta.T k_test."""
         self._check_fitted()
         X = np.asarray(X, dtype=np.float64)
         if X.ndim != 2 or X.shape[1] != self.X_train_.shape[1]:
@@ -516,25 +576,25 @@ class SpectralNFST:
         return np.asarray(similarities.T @ self.proj_, dtype=np.float64)
 
     def component_distances(self, X: np.ndarray) -> np.ndarray:
-        """Euclidean distances to all projected sub-group centroids."""
+        """Inference step 2: distances ||y-m_k|| to all component centroids."""
         projected = self.transform(X)
         return np.linalg.norm(
             projected[:, None, :] - self.centroids_[None, :, :], axis=2
         )
 
     def anomaly_score(self, X: np.ndarray) -> np.ndarray:
-        """Paper anomaly score A: distance to the nearest component centroid."""
+        """Algorithm 3 score A: distance to the nearest known sub-manifold."""
         return np.min(self.component_distances(X), axis=1)
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Closed-set Algorithm 2 prediction using the nearest component."""
+        """Algorithm 2: nearest component k*, then return original label L(k*)."""
         nearest = np.argmin(self.component_distances(X), axis=1)
         return self.component_labels_[nearest]
 
     def predict_with_novelty(
         self, X: np.ndarray, threshold: float | None = None
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Return Algorithm 3 labels and anomaly scores for threshold ``tau``."""
+        """Algorithm 3: return L(k*) if A<=tau, otherwise the novelty label."""
         tau = self.novelty_threshold if threshold is None else threshold
         if tau is None:
             raise ValueError("A novelty threshold must be passed or set at construction")

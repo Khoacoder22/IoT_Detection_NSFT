@@ -4,6 +4,11 @@ This guide describes the implementation of **Spectral NFST for Scalable
 Multiclass Novelty Detection in IoT Systems** from `AD_with_Khoa_MND.pdf` and
 shows how to run it on every dataset variant included in this repository.
 
+Windows users who only need to run experiments should start with the simpler
+Vietnamese guide: [HUONG_DAN_CHAY_SPECTRAL_NFST.md](HUONG_DAN_CHAY_SPECTRAL_NFST.md).
+It provides ready-made PowerShell scripts for a single run, resumable grids, and
+result ranking, so users do not need to write `foreach` or `Import-Csv` code.
+
 ## 1. Available datasets
 
 The repository contains **10 CSV dataset variants across 8 dataset families**.
@@ -70,7 +75,9 @@ The recommended Spectral NFST configuration is:
 
 ## 4. Metrics written to the CSV
 
-The batch runner writes `results/spectral_nfst/summary.csv`. Each row contains:
+The classification runner writes `results/spectral_nfst/classification.csv`.
+The backward-compatible `run_spectral_nfst.py` alias retains the old
+`results/spectral_nfst/summary.csv` default. Each row contains:
 
 | Column | Meaning |
 |---|---|
@@ -108,19 +115,19 @@ Spectral NFST uses dense kernel and decomposition matrices. A full run on
 Start with 100 samples per class to validate the complete ten-variant pipeline:
 
 ```powershell
-python code/run_spectral_nfst.py --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --samples-per-class 100 --seed 42
+python code/run_spectral_nfst_classification.py --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --samples-per-class 100 --seed 42
 ```
 
 Results are appended to:
 
 ```text
-results/spectral_nfst/summary.csv
+results/spectral_nfst/classification.csv
 ```
 
 Use a different output file to avoid appending duplicate rows:
 
 ```powershell
-python code/run_spectral_nfst.py --components-per-class 2 --samples-per-class 100 --output results/spectral_nfst/run_q2_seed42.csv
+python code/run_spectral_nfst_classification.py --components-per-class 2 --samples-per-class 100 --output results/spectral_nfst/run_q2_seed42.csv
 ```
 
 ## 7. Full-data command
@@ -128,7 +135,7 @@ python code/run_spectral_nfst.py --components-per-class 2 --samples-per-class 10
 Omit `--samples-per-class` to use every row in every registered variant:
 
 ```powershell
-python code/run_spectral_nfst.py --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --seed 42 --output results/spectral_nfst/full_q2_seed42.csv
+python code/run_spectral_nfst_classification.py --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --seed 42 --output results/spectral_nfst/full_q2_seed42.csv
 ```
 
 Run variants sequentially, as the provided script does. Parallel full-data runs
@@ -139,10 +146,74 @@ can multiply the already large dense-matrix memory requirement.
 Example for ToN-IoT 2,000:
 
 ```powershell
-python code/train_evaluate.py --dataset ToN_IoT --limit 2000 --model SpectralNFST --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --samples-per-class 100 --seed 42 --output results/spectral_nfst/ToN_IoT_2000_q2.csv
+python code/run_spectral_nfst_classification.py --dataset ToN_IoT --limit 2000 --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --samples-per-class 100 --seed 42 --output results/spectral_nfst/ToN_IoT_2000_q2.csv
 ```
 
 For the full ToN-IoT 2,000 variant, omit `--samples-per-class 100`.
+Only ToN-IoT and IoTID20 have a 2,000-row-per-class variant; use limit 1,000
+for the other dataset families.
+
+The classification-only CLI accepts these experiment inputs:
+
+- `--dataset`: one dataset family; omit it to run all 10 variants.
+- `--limit`: registered rows-per-class variant, normally 1000 or 2000.
+- `--kernel`: `linear`, `poly`, `rbf`, `sigmoid`, `abel`, `laplacian`, or
+  `sobolev`. Spectral NFST does not accept `none` even though it appears in the
+  shared kernel choice list.
+- `--scaler`: `QuantileTransformer`, `StandardScaler`, `MinMaxScaler`,
+  `RobustScaler`, or `Normalizer`.
+- `--poly`: `-1` keeps the normal feature flow; `0` additionally applies the
+  existing independent-row preprocessing; `2` or `3` first creates polynomial
+  interaction features and then applies that preprocessing.
+- `--components-per-class`: target MaxST partitions `Q_j` for each class.
+- `--samples-per-class`: optional class-balanced cap for quick tests. Omit it
+  for the complete selected CSV.
+- `--seed`: controls the deterministic sampling and train/test split.
+- `--output`: CSV file to which the run is appended.
+
+### 8.1 PowerShell parameter grid for one dataset
+
+The recommended beginner command is the resumable wrapper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/spectral_nfst/run_grid_classification.ps1 -Dataset BoT_IoT -Limit 1000
+```
+
+The longer loop below is retained for users who want to understand or customize
+the raw PowerShell orchestration.
+
+This example evaluates 3 kernels x 3 scalers x 3 component counts on
+BoT-IoT. It uses one fixed seed and appends the 27 configurations to one CSV:
+
+```powershell
+$kernels = @("rbf", "laplacian", "linear")
+$scalers = @("QuantileTransformer", "StandardScaler", "RobustScaler")
+$components = @(1, 2, 3)
+$resultFile = "results/spectral_nfst/grid_BoT_IoT_1000.csv"
+
+foreach ($kernel in $kernels) {
+    foreach ($scaler in $scalers) {
+        foreach ($q in $components) {
+            python code/run_spectral_nfst_classification.py `
+                --dataset BoT_IoT `
+                --limit 1000 `
+                --kernel $kernel `
+                --scaler $scaler `
+                --poly -1 `
+                --components-per-class $q `
+                --samples-per-class 100 `
+                --seed 42 `
+                --output $resultFile
+        }
+    }
+}
+```
+
+Use the sample cap only for an initial search. Re-run the strongest few
+configurations without `--samples-per-class` and with several seeds before
+reporting a final result. Parameter selection should ultimately use a validation
+split; repeatedly choosing the best configuration on the test set gives an
+optimistically biased estimate.
 
 ## 9. Novelty detection from Python
 
@@ -168,3 +239,21 @@ y_novelty, anomaly_scores = model.predict_with_novelty(X_test)
 Do not select `tau` on the final test set. A suitable protocol holds out one or
 more classes as unknown, chooses `tau` using separate validation data, and then
 reports novelty recall, false-positive rate, and AUROC on the untouched test set.
+
+## 10. Separate multi-novelty command
+
+List the cleaned class labels before selecting held-out unknown classes:
+
+```powershell
+python code/run_spectral_nfst_novelty.py --dataset BoT_IoT --limit 1000 --list-classes
+```
+
+Run multi-novelty with both `theft` and `scan` absent from training:
+
+```powershell
+python code/run_spectral_nfst_novelty.py --dataset BoT_IoT --limit 1000 --unknown-labels theft scan --threshold 0.25 --kernel rbf --scaler QuantileTransformer --poly -1 --components-per-class 2 --samples-per-class 100 --seed 42
+```
+
+This command computes open-set MCC/F1 plus NDR, novelty FPR, AUROC and AUPRC.
+The threshold is mandatory and is never optimized on test labels. Select it in
+a separate validation experiment before using the command for final reporting.
