@@ -1,0 +1,138 @@
+{
+  "MCC": 1.0,
+  "ACC": 100.0,
+  "TPR Macro": 100.0,
+  "TPR Weighted": 100.0,
+  "FPR": 0.0,
+  "PPV Macro": 100.0,
+  "PPV Weighted": 100.0,
+  "F1 Macro": 100.0,
+  "F1 Weighted": 100.0,
+  "AUC (binary)": -1.0,
+  "CFS Matrix": [
+    [
+      200,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      400,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      400,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      400,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      400,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      224
+    ]
+  ],
+  "AUROC OvR Macro": 100.0,
+  "AUROC OvR Weighted": 100.0,
+  "AUROC OvO Macro": 100.0,
+  "Per-class report": {
+    "0Normal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "HTTP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 400.0
+    },
+    "TCP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 400.0
+    },
+    "UDP": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 400.0
+    },
+    "scan": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 400.0
+    },
+    "theft": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 224.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2024.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2024.0
+    }
+  },
+  "_dataset": "BoT_IoT",
+  "_model": "HHHv2",
+  "_config": {
+    "kernel": "laplacian",
+    "poly": -1,
+    "scaler": "MinMaxScaler",
+    "limit": 1000
+  },
+  "_n_train": 7729,
+  "_n_test": 2024,
+  "_n_classes": 6,
+  "_classes": [
+    "0Normal",
+    "HTTP",
+    "TCP",
+    "UDP",
+    "scan",
+    "theft"
+  ],
+  "_t_preprocess": 0.6222548484802246,
+  "_t_fit": 190.78152084350586,
+  "_t_predict": 0.17502403259277344
+}

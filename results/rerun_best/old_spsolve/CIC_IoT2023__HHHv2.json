@@ -1,0 +1,138 @@
+{
+  "MCC": 0.9978589247496709,
+  "ACC": 99.95,
+  "TPR Macro": 99.75,
+  "TPR Weighted": 99.85000000000001,
+  "FPR": 0.03,
+  "PPV Macro": 99.75206475871468,
+  "PPV Weighted": 99.85123885522881,
+  "F1 Macro": 99.74999531239258,
+  "F1 Weighted": 99.84999718743555,
+  "AUC (binary)": -1.0,
+  "CFS Matrix": [
+    [
+      200,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      1000,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      199,
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      200,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      198,
+      2
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      200
+    ]
+  ],
+  "AUROC OvR Macro": 99.99712962962963,
+  "AUROC OvR Weighted": 99.99827777777777,
+  "AUROC OvO Macro": 99.99503333333334,
+  "Per-class report": {
+    "0Normal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "DDoS/DoS": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1000.0
+    },
+    "Mirai": {
+      "precision": 1.0,
+      "recall": 0.995,
+      "f1-score": 0.9974937343358395,
+      "support": 200.0
+    },
+    "Scan": {
+      "precision": 0.9950248756218906,
+      "recall": 1.0,
+      "f1-score": 0.9975062344139651,
+      "support": 200.0
+    },
+    "Spoofing": {
+      "precision": 1.0,
+      "recall": 0.99,
+      "f1-score": 0.9949748743718593,
+      "support": 200.0
+    },
+    "Web": {
+      "precision": 0.9900990099009901,
+      "recall": 1.0,
+      "f1-score": 0.9950248756218906,
+      "support": 200.0
+    },
+    "accuracy": 0.9985,
+    "macro avg": {
+      "precision": 0.9975206475871468,
+      "recall": 0.9975,
+      "f1-score": 0.9974999531239258,
+      "support": 2000.0
+    },
+    "weighted avg": {
+      "precision": 0.9985123885522882,
+      "recall": 0.9985,
+      "f1-score": 0.9984999718743555,
+      "support": 2000.0
+    }
+  },
+  "_dataset": "CIC_IoT2023",
+  "_model": "HHHv2",
+  "_config": {
+    "kernel": "laplacian",
+    "poly": -1,
+    "scaler": "QuantileTransformer",
+    "limit": 1000
+  },
+  "_n_train": 7640,
+  "_n_test": 2000,
+  "_n_classes": 6,
+  "_classes": [
+    "0Normal",
+    "DDoS/DoS",
+    "Mirai",
+    "Scan",
+    "Spoofing",
+    "Web"
+  ],
+  "_t_preprocess": 0.182844877243042,
+  "_t_fit": 177.11633682250977,
+  "_t_predict": 0.29290294647216797
+}

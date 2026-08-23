@@ -1,0 +1,118 @@
+{
+  "MCC": 0.9475334603661142,
+  "ACC": 98.32,
+  "TPR Macro": 95.8,
+  "TPR Weighted": 95.8,
+  "FPR": 1.05,
+  "PPV Macro": 95.83087355880178,
+  "PPV Weighted": 95.83087355880178,
+  "F1 Macro": 95.80879346611664,
+  "F1 Weighted": 95.80879346611664,
+  "AUC (binary)": -1.0,
+  "CFS Matrix": [
+    [
+      389,
+      0,
+      5,
+      5,
+      1
+    ],
+    [
+      0,
+      399,
+      1,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      379,
+      10,
+      9
+    ],
+    [
+      2,
+      0,
+      11,
+      377,
+      10
+    ],
+    [
+      1,
+      0,
+      14,
+      13,
+      372
+    ]
+  ],
+  "AUROC OvR Macro": 98.94878125,
+  "AUROC OvR Weighted": 98.94878125000001,
+  "AUROC OvO Macro": 98.94878125,
+  "Per-class report": {
+    "0Normal": {
+      "precision": 0.9873096446700508,
+      "recall": 0.9725,
+      "f1-score": 0.9798488664987406,
+      "support": 400.0
+    },
+    "DoS": {
+      "precision": 1.0,
+      "recall": 0.9975,
+      "f1-score": 0.9987484355444305,
+      "support": 400.0
+    },
+    "MITM ARP Spoofing": {
+      "precision": 0.9243902439024391,
+      "recall": 0.9475,
+      "f1-score": 0.9358024691358025,
+      "support": 400.0
+    },
+    "Mirai": {
+      "precision": 0.9308641975308642,
+      "recall": 0.9425,
+      "f1-score": 0.9366459627329192,
+      "support": 400.0
+    },
+    "Scan": {
+      "precision": 0.9489795918367347,
+      "recall": 0.93,
+      "f1-score": 0.9393939393939394,
+      "support": 400.0
+    },
+    "accuracy": 0.958,
+    "macro avg": {
+      "precision": 0.9583087355880178,
+      "recall": 0.958,
+      "f1-score": 0.9580879346611664,
+      "support": 2000.0
+    },
+    "weighted avg": {
+      "precision": 0.9583087355880179,
+      "recall": 0.958,
+      "f1-score": 0.9580879346611664,
+      "support": 2000.0
+    }
+  },
+  "_dataset": "IoTID20",
+  "_model": "HHHv2",
+  "_config": {
+    "kernel": "laplacian",
+    "poly": 0,
+    "scaler": "MinMaxScaler",
+    "limit": 2000
+  },
+  "_n_train": 7680,
+  "_n_test": 2000,
+  "_n_classes": 5,
+  "_classes": [
+    "0Normal",
+    "DoS",
+    "MITM ARP Spoofing",
+    "Mirai",
+    "Scan"
+  ],
+  "_t_preprocess": 5.41422700881958,
+  "_t_fit": 151.4597270488739,
+  "_t_predict": 0.48764705657958984
+}

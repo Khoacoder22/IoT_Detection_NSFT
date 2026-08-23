@@ -1,0 +1,184 @@
+{
+  "MCC": 0.9799642641236782,
+  "ACC": 99.5703125,
+  "TPR Macro": 97.83333333333333,
+  "TPR Weighted": 98.28125,
+  "FPR": 0.24553571428571427,
+  "PPV Macro": 98.34534375822666,
+  "PPV Weighted": 98.36580934100587,
+  "F1 Macro": 98.05237261784589,
+  "F1 Weighted": 98.2951079795103,
+  "AUC (binary)": -1.0,
+  "CFS Matrix": [
+    [
+      198,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1,
+      0
+    ],
+    [
+      2,
+      113,
+      0,
+      0,
+      0,
+      5,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      194,
+      0,
+      0,
+      4,
+      0,
+      0
+    ],
+    [
+      6,
+      0,
+      0,
+      194,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      0,
+      0,
+      197,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      0,
+      0,
+      0,
+      398,
+      0,
+      0
+    ],
+    [
+      3,
+      0,
+      0,
+      0,
+      0,
+      0,
+      197,
+      0
+    ],
+    [
+      1,
+      0,
+      2,
+      0,
+      0,
+      1,
+      0,
+      396
+    ]
+  ],
+  "AUROC OvR Macro": 99.83450177294415,
+  "AUROC OvR Weighted": 99.86190828077542,
+  "AUROC OvO Macro": 99.82876860119046,
+  "Per-class report": {
+    "0Normal": {
+      "precision": 0.9124423963133641,
+      "recall": 0.99,
+      "f1-score": 0.9496402877697842,
+      "support": 200.0
+    },
+    "BruteForce": {
+      "precision": 1.0,
+      "recall": 0.9416666666666667,
+      "f1-score": 0.9699570815450643,
+      "support": 120.0
+    },
+    "DDoS": {
+      "precision": 0.9897959183673469,
+      "recall": 0.97,
+      "f1-score": 0.9797979797979798,
+      "support": 200.0
+    },
+    "DoS": {
+      "precision": 1.0,
+      "recall": 0.97,
+      "f1-score": 0.9847715736040609,
+      "support": 200.0
+    },
+    "MITM": {
+      "precision": 0.9949494949494949,
+      "recall": 0.985,
+      "f1-score": 0.9899497487437185,
+      "support": 200.0
+    },
+    "Malware": {
+      "precision": 0.9754901960784313,
+      "recall": 0.995,
+      "f1-score": 0.9851485148514851,
+      "support": 400.0
+    },
+    "Scan": {
+      "precision": 0.9949494949494949,
+      "recall": 0.985,
+      "f1-score": 0.9899497487437185,
+      "support": 200.0
+    },
+    "WebAttack": {
+      "precision": 1.0,
+      "recall": 0.99,
+      "f1-score": 0.9949748743718593,
+      "support": 400.0
+    },
+    "accuracy": 0.9828125,
+    "macro avg": {
+      "precision": 0.9834534375822666,
+      "recall": 0.9783333333333333,
+      "f1-score": 0.9805237261784588,
+      "support": 1920.0
+    },
+    "weighted avg": {
+      "precision": 0.9836580934100587,
+      "recall": 0.9828125,
+      "f1-score": 0.9829510797951031,
+      "support": 1920.0
+    }
+  },
+  "_dataset": "ToN_IoT",
+  "_model": "HHHv2",
+  "_config": {
+    "kernel": "laplacian",
+    "poly": -1,
+    "scaler": "QuantileTransformer",
+    "limit": 1000
+  },
+  "_n_train": 7333,
+  "_n_test": 1920,
+  "_n_classes": 8,
+  "_classes": [
+    "0Normal",
+    "BruteForce",
+    "DDoS",
+    "DoS",
+    "MITM",
+    "Malware",
+    "Scan",
+    "WebAttack"
+  ],
+  "_t_preprocess": 0.11866188049316406,
+  "_t_fit": 214.3870267868042,
+  "_t_predict": 0.22817516326904297
+}

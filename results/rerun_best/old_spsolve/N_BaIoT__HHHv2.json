@@ -1,0 +1,210 @@
+{
+  "MCC": 0.9981274260071088,
+  "ACC": 99.96296296296296,
+  "TPR Macro": 99.83333333333333,
+  "TPR Weighted": 99.83333333333333,
+  "FPR": 0.020833333333333336,
+  "PPV Macro": 99.83579638752053,
+  "PPV Weighted": 99.83579638752053,
+  "F1 Macro": 99.83360488859118,
+  "F1 Weighted": 99.83360488859118,
+  "AUC (binary)": -1.0,
+  "CFS Matrix": [
+    [
+      200,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      200,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      200,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0,
+      199,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      2,
+      0,
+      0,
+      0,
+      198,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      200,
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      200,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      200,
+      0
+    ],
+    [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      200
+    ]
+  ],
+  "AUROC OvR Macro": 99.99263888888889,
+  "AUROC OvR Weighted": 99.99263888888889,
+  "AUROC OvO Macro": 99.99263888888889,
+  "Per-class report": {
+    "0Normal": {
+      "precision": 0.9852216748768473,
+      "recall": 1.0,
+      "f1-score": 0.9925558312655087,
+      "support": 200.0
+    },
+    "ack": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "combo": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "junk": {
+      "precision": 1.0,
+      "recall": 0.995,
+      "f1-score": 0.9974937343358395,
+      "support": 200.0
+    },
+    "scan": {
+      "precision": 1.0,
+      "recall": 0.99,
+      "f1-score": 0.9949748743718593,
+      "support": 200.0
+    },
+    "syn": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "tcp": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "udp": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "udpplain": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "accuracy": 0.9983333333333333,
+    "macro avg": {
+      "precision": 0.9983579638752053,
+      "recall": 0.9983333333333333,
+      "f1-score": 0.9983360488859119,
+      "support": 1800.0
+    },
+    "weighted avg": {
+      "precision": 0.9983579638752054,
+      "recall": 0.9983333333333333,
+      "f1-score": 0.9983360488859119,
+      "support": 1800.0
+    }
+  },
+  "_dataset": "N_BaIoT",
+  "_model": "HHHv2",
+  "_config": {
+    "kernel": "laplacian",
+    "poly": -1,
+    "scaler": "QuantileTransformer",
+    "limit": 1000
+  },
+  "_n_train": 6880,
+  "_n_test": 1800,
+  "_n_classes": 9,
+  "_classes": [
+    "0Normal",
+    "ack",
+    "combo",
+    "junk",
+    "scan",
+    "syn",
+    "tcp",
+    "udp",
+    "udpplain"
+  ],
+  "_t_preprocess": 0.5550992488861084,
+  "_t_fit": 181.95817613601685,
+  "_t_predict": 0.5996232032775879
+}

@@ -1,0 +1,40 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Office temp/lock files
+~$*
+*.tmp
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Claude Code local settings
+.claude/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+
+# Large raw data archives (reproducible via code/build_n_baiot.py + cnNFST sources)
+_archive/
+data/N_BaIoT/baiot.zip
+data/N_BaIoT/extracted/
+
+# Large result artifacts — per-run JSONs contain y_score arrays (~300 KB each).
+# Regenerable via code/scene_b_runner.py and code/baseline_runner.py.
+# Keep the summary.csv files committed (small, aggregate view).
+results/scene_b/runs/
+results/baselines_default/runs/
+results/ablation_ridge/runs/
+results/ablation_gamma/runs/
