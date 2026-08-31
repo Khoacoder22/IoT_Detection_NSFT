@@ -26,7 +26,7 @@ $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 Set-Location $projectRoot
 
-$validKernels = @("linear", "poly", "rbf", "sigmoid", "abel", "laplacian", "sobolev")
+$validKernels = @("linear", "poly", "rbf", "sigmoid", "abel", "laplacian", "sobolev", "rff", "chi2","fractional")
 $validScalers = @("QuantileTransformer", "StandardScaler", "MinMaxScaler", "RobustScaler", "Normalizer")
 $kernelList = @($Kernels -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $scalerList = @($Scalers -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
@@ -46,8 +46,8 @@ foreach ($scaler in $scalerList) {
 foreach ($q in $componentList) {
     if ($q -lt 1) { throw "Every Q value must be at least 1." }
 }
-if (($Limit -eq 2000) -and ($Dataset -notin @("ToN_IoT", "IoTID20"))) {
-    throw "Limit 2000 is available only for ToN_IoT and IoTID20."
+if (($Limit -eq 2000) -and ($Dataset -notin @("ToN_IoT", "IoTID20", "N_BaIoT"))) {
+    throw "Limit 2000 is available only for ToN_IoT, IoTID20, and N_BaIoT."
 }
 
 if ([string]::IsNullOrWhiteSpace($Output)) {

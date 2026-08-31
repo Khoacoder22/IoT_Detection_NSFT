@@ -7,7 +7,8 @@ from scipy.linalg import LinAlgError, eigh, solve as _la_solve, svd
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components, minimum_spanning_tree
 from sklearn.preprocessing import KernelCenterer, OneHotEncoder
-
+from scipy.spatial.distance import cdist
+from sklearn.kernel_approximation import RBFSampler
 from .kernels import compute_kernel, gamma_heuristic
 
 
@@ -397,6 +398,7 @@ class SpectralNFST:
         n_components=2,
         kernel: str = "rbf",
         gamma: float | str | None = None,
+        rff_components: int | None = None, # rff component 
         novelty_threshold: float | None = None,
         novelty_label=-1,
         rank_tol: float | None = None,
@@ -404,6 +406,7 @@ class SpectralNFST:
         self.n_components = n_components
         self.kernel = kernel
         self.gamma = gamma
+        self.rff_components = rff_components
         self.novelty_threshold = novelty_threshold
         self.novelty_label = novelty_label
         self.rank_tol = rank_tol
@@ -450,9 +453,29 @@ class SpectralNFST:
         # explicit similarity-space representation z_i of training sample i.
         # Symmetrization removes insignificant floating-point asymmetry.
         # ---------------------------------------------------------------------
+        # self.X_train_ = X.copy()
+        # gamma = self._resolve_gamma(X)
+        # K = compute_kernel(X, kernel=self.kernel, gamma=gamma)
+        # K = np.asarray((K + K.T) * 0.5, dtype=np.float64)
         self.X_train_ = X.copy()
         gamma = self._resolve_gamma(X)
-        K = compute_kernel(X, kernel=self.kernel, gamma=gamma)
+
+        # Sửa đoạn code trong Phase 1 hàm fit():
+        if self.rff_components is not None and self.rff_components > 0:
+        # Lấy gamma đã tính từ _resolve_gamma hoặc tự động dùng 1 / n_features
+            gamma_val = gamma if isinstance(gamma, (int, float)) else (1.0 / X.shape[1])
+            self.rff_sampler_ = RBFSampler(
+                n_components=self.rff_components, 
+                gamma=gamma_val, 
+                random_state=42
+            )
+            Z = self.rff_sampler_.fit_transform(X)
+            self.Z_train_ = Z
+            K = Z @ Z.T
+        else:
+            print("🔥 SpectralNFST kernel:", self.kernel)
+            K = compute_kernel(X, kernel=self.kernel, gamma=gamma)
+
         K = np.asarray((K + K.T) * 0.5, dtype=np.float64)
 
         # ---------------------------------------------------------------------
@@ -503,9 +526,10 @@ class SpectralNFST:
         #          0 otherwise.
         # Therefore H.T @ H = I_Q and H @ H.T averages values within components.
         # ---------------------------------------------------------------------
+        comp_sizes = np.bincount(component_ids, minlength=total_components).astype(np.float64)
         H = np.zeros((len(y), total_components), dtype=np.float64)
-        for component, members in enumerate(component_indices):
-            H[members, component] = 1.0 / np.sqrt(len(members))
+        H[np.arange(len(y)), component_ids] = 1.0 / np.sqrt(comp_sizes[component_ids])
+        self.comp_sizes_ = comp_sizes
 
         # ---------------------------------------------------------------------
         # PHASE 5A - BASIS OF THE CENTERED KERNEL RANGE (Algorithm 1, line 11)
@@ -554,33 +578,51 @@ class SpectralNFST:
         # mean similarity profile mu_k^sim, then m_k = Theta.T @ mu_k^sim.
         # These m_k centroids are the manifold reference points at inference.
         # ---------------------------------------------------------------------
-        similarity_means = np.column_stack(
-            [K[:, members].mean(axis=1) for members in component_indices]
-        )
-        self.centroids_ = np.asarray(similarity_means.T @ self.proj_, dtype=np.float64)
+        # similarity_means = np.column_stack(
+        #     [K[:, members].mean(axis=1) for members in component_indices]
+        # )
+        # self.centroids_ = np.asarray(similarity_means.T @ self.proj_, dtype=np.float64)
+        K_proj = KV @ alpha
+        self.centroids_ = np.asarray((H / np.sqrt(self.comp_sizes_)).T @ K_proj, dtype=np.float64)
         return self
 
     def _check_fitted(self) -> None:
         if not hasattr(self, "proj_"):
             raise RuntimeError("SpectralNFST must be fitted before prediction")
 
+    # def transform(self, X: np.ndarray) -> np.ndarray:
+    #     """Inference step 1: kernel-map and embed samples as y=Theta.T k_test."""
+    #     self._check_fitted()
+    #     X = np.asarray(X, dtype=np.float64)
+    #     if X.ndim != 2 or X.shape[1] != self.X_train_.shape[1]:
+    #         raise ValueError(f"X must have shape (n_samples, {self.X_train_.shape[1]})")
+    #     similarities = compute_kernel(
+    #         self.X_train_, X, kernel=self.kernel, gamma=self._gamma_used
+    #     )
+    #     return np.asarray(similarities.T @ self.proj_, dtype=np.float64)
+    # RFF version of transform
     def transform(self, X: np.ndarray) -> np.ndarray:
         """Inference step 1: kernel-map and embed samples as y=Theta.T k_test."""
         self._check_fitted()
         X = np.asarray(X, dtype=np.float64)
         if X.ndim != 2 or X.shape[1] != self.X_train_.shape[1]:
             raise ValueError(f"X must have shape (n_samples, {self.X_train_.shape[1]})")
-        similarities = compute_kernel(
-            self.X_train_, X, kernel=self.kernel, gamma=self._gamma_used
-        )
+        
+        # Nếu đã dùng RFF ở bước fit
+        if hasattr(self, "rff_sampler_"):
+            Z_test = self.rff_sampler_.transform(X)
+            similarities = self.Z_train_ @ Z_test.T  # Ma trận (N_train x N_test)
+        else:
+            similarities = compute_kernel(
+                self.X_train_, X, kernel=self.kernel, gamma=self._gamma_used
+            )
         return np.asarray(similarities.T @ self.proj_, dtype=np.float64)
+
 
     def component_distances(self, X: np.ndarray) -> np.ndarray:
         """Inference step 2: distances ||y-m_k|| to all component centroids."""
         projected = self.transform(X)
-        return np.linalg.norm(
-            projected[:, None, :] - self.centroids_[None, :, :], axis=2
-        )
+        return cdist(projected, self.centroids_, metric="euclidean")
 
     def anomaly_score(self, X: np.ndarray) -> np.ndarray:
         """Algorithm 3 score A: distance to the nearest known sub-manifold."""

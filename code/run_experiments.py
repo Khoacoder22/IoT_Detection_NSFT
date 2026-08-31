@@ -88,19 +88,19 @@ def build_jobs(
 PRESETS = {
     "tables_2_3": dict(
         models=["HHH", "HHHv2"],
-        kernels=["none", "rbf", "poly", "linear", "sigmoid", "abel", "laplacian", "sobolev"],
+        kernels=["none", "rbf", "poly", "linear", "sigmoid", "abel", "laplacian", "sobolev","rff"],
         scalers=["QuantileTransformer", "StandardScaler", "MinMaxScaler"],
         polys=[-1, 0, 2],
     ),
     "tables_4_8": dict(
         models=list(BASELINE_NAMES) + ["KNFST"],
-        kernels=["rbf"],
+        kernels=["rbf", "rff"],
         scalers=["QuantileTransformer"],
         polys=[-1],
     ),
     "full": dict(
         models=list(ALL_MODELS),
-        kernels=list(KERNEL_CHOICES),
+        kernels=list(KERNEL_CHOICES) + "rff",
         scalers=["QuantileTransformer", "StandardScaler", "MinMaxScaler"],
         polys=[-1, 0, 2],
     ),
