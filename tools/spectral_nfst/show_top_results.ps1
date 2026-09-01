@@ -30,7 +30,8 @@ $rows |
         @{Name = "MCC"; Expression = { "{0:F6}" -f [double]$_.MCC }},
         @{Name = "F1 Macro"; Expression = { "{0:F2}" -f [double]$_.'F1 Macro' }},
         @{Name = "ACC"; Expression = { "{0:F2}" -f [double]$_.ACC }},
-        @{Name = "Train(s)"; Expression = { "{0:F2}" -f [double]$_.'Training time' }} |
+        @{Name = "Train(s)"; Expression = { "{0:F2}" -f [double]$_.'Training time' }},
+        @{Name = "Test(s)"; Expression = { "{0:F4}" -f [double]$_.'Test time' }} |
     Format-Table -AutoSize
 
 Write-Host "MCC is the primary ranking metric; also inspect F1 Macro and the confusion matrix." -ForegroundColor Yellow

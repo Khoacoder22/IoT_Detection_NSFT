@@ -204,17 +204,10 @@ def run_spectral_nfst_classification(
     output: Path | None = None,
     variants=None,
 ) -> list[dict]:
-    """Run closed-set Spectral NFST classification on dataset variants.
-
-    This is the original ``run_spectral_nfst.py`` behavior moved into a reusable
-    function. It still delegates every individual experiment to the unchanged
-    ``train_evaluate.run_one`` flow.
-    """
+    """Run closed-set Spectral NFST classification on dataset variants."""
     if kernel == "none":
         raise ValueError("SpectralNFST requires a kernel; use rbf (recommended)")
     output = output or RESULTS_DIR / "spectral_nfst" / "classification.csv"
-    # ``None`` means the complete registered benchmark.  A caller may pass a
-    # one-item tuple such as (("BoT_IoT", 1000),) to test one dataset only.
     variants = DATASET_VARIANTS if variants is None else tuple(variants)
     results: list[dict] = []
 
@@ -235,14 +228,16 @@ def run_spectral_nfst_classification(
             )
             append_row(row, output)
             results.append({"_status": "ok", **row})
+
+            train_t = row.get("Train(s)", row.get("Training time", 0.0))
+            test_t = row.get("Test(s)", row.get("Test time", 0.0))
+
             print(
                 f"          MCC={row['MCC']:.4f} ACC={row['ACC']:.2f} "
-                f"F1={row['F1 Macro']:.2f}",
+                f"F1={row['F1 Macro']:.2f} Train={train_t:.2f}s Test={test_t:.4f}s",
                 flush=True,
             )
         except Exception as exc:
-            # Preserve the original all-variants runner behavior: report one
-            # failed dataset and continue with the remaining variants.
             results.append({
                 "_status": "error", "Data Type": variant,
                 "_error": f"{type(exc).__name__}: {exc}",
@@ -265,13 +260,7 @@ def run_spectral_nfst_multinovelty(
     seed: int = 42,
     output: Path | None = None,
 ) -> dict:
-    """Run one multiclass multi-novelty experiment with a fixed threshold.
-
-    ``unknown_labels`` may contain one or several original string labels. They
-    are absent from training and mapped to -1 in test. ``threshold`` must have
-    been selected independently (for example on validation data); this function
-    intentionally performs no test-set threshold search.
-    """
+    """Run one multiclass multi-novelty experiment with a fixed threshold."""
     if kernel == "none":
         raise ValueError("SpectralNFST requires a kernel; use rbf (recommended)")
     if threshold < 0:
@@ -290,13 +279,13 @@ def run_spectral_nfst_multinovelty(
         novelty_threshold=threshold,
         novelty_label=-1,
     )
-    t0 = time.time()
+    t0 = time.perf_counter()
     model.fit(X_train, y_train)
-    training_time = time.time() - t0
+    training_time = time.perf_counter() - t0
 
-    t0 = time.time()
+    t0 = time.perf_counter()
     y_pred, anomaly_scores = model.predict_with_novelty(X_test)
-    test_time = time.time() - t0
+    test_time = time.perf_counter() - t0
     metrics = _novelty_metrics(y_test, y_pred, anomaly_scores)
 
     row = {
