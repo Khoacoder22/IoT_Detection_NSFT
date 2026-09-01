@@ -17,7 +17,7 @@ from sklearn.metrics.pairwise import cosine_similarity, chi2_kernel # chi-kernel
 from sklearn.metrics.pairwise import pairwise_kernels as sk_pairwise
 
 SKLEARN_KERNELS = ("linear", "poly", "rbf", "sigmoid")
-CUSTOM_KERNELS = ("abel", "laplacian", "sobolev", "rff", "chi2", "fractional")
+CUSTOM_KERNELS = ("abel", "laplacian", "sobolev", "rff", "chi2", "l05_exponential_kernel")
 KERNEL_CHOICES = ("none", *SKLEARN_KERNELS, *CUSTOM_KERNELS)
 
 ABEL_ALPHA = 0.1
@@ -87,7 +87,7 @@ def gamma_heuristic(X: np.ndarray, k: int = 5) -> float:
     sigma = max(sigma, 1e-12)
     return 1.0 / (2.0 * sigma * sigma)
 
-def fractional_kernel(X, Y=None, gamma=None):
+def l05_exponential_kernel(X, Y=None, gamma=None):
     """Tính Fractional (L_0.5) Kernel tối ưu bộ nhớ 2D."""
     X_arr = np.asarray(X, dtype=np.float64)
     Y_arr = X_arr if Y is None else np.asarray(Y, dtype=np.float64)
@@ -139,6 +139,6 @@ def compute_kernel(
 
         gamma_val = float(gamma) if gamma is not None else (1.0 / X_pos.shape[1])
         return chi2_kernel(X_pos, Y_pos, gamma=gamma_val)
-    if key == "fractional":
-        return fractional_kernel(X, Y, gamma)
+    if key == "l05_exponential_kernel":
+        return l05_exponential_kernel(X, Y, gamma)
     raise ValueError(f"Unknown kernel '{kernel}'. Valid: {KERNEL_CHOICES}")

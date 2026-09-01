@@ -26,7 +26,7 @@ $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 Set-Location $projectRoot
 
-$validKernels = @("linear", "poly", "rbf", "sigmoid", "abel", "laplacian", "sobolev", "rff", "chi2","fractional")
+$validKernels = @("linear", "poly", "rbf", "sigmoid", "abel", "laplacian", "sobolev", "rff", "chi2","l05_exponential_kernel")
 $validScalers = @("QuantileTransformer", "StandardScaler", "MinMaxScaler", "RobustScaler", "Normalizer")
 $kernelList = @($Kernels -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $scalerList = @($Scalers -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ })
