@@ -1,0 +1,7 @@
+Data Type,Poly,Kernel,SCALER,Model,MCC,NDR,AUC_N,ACC,TPR Macro,FPR,PPV Macro,F1 Macro,AUC,CLS Report,CFS Matrix,Training time,Test time
+BoT_IoT_1000,-1,l05_exponential_kernel,QuantileTransformer,KNFST,0.997598778403156,-1,-1,99.93412384716733,99.80059523809524,0.039525691699604744,99.67320261437908,99.73506738859894,-1.0,,"[[200   0   0   0   0   0]
+ [  1 399   0   0   0   0]
+ [  0   0 400   0   0   0]
+ [  0   0   0 400   0   0]
+ [  2   0   0   0 398   0]
+ [  1   0   0   0   0 223]]",685.8385643959045,3.3973686695098877
