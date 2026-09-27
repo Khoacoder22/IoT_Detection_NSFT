@@ -35,6 +35,36 @@ $modelOutput = Join-Path $modelsRoot "${Model}.csv"
 New-Item -ItemType Directory -Force $modelsRoot | Out-Null
 New-Item -ItemType Directory -Force $tempRoot | Out-Null
 
+$dependencyChecks = @{
+    "LGBM" = @{
+        Code = "import lightgbm"
+        Install = "python -m pip install lightgbm"
+    }
+    "TabNet" = @{
+        Code = "import torch; import pytorch_tabnet"
+        Install = "python -m pip install torch pytorch-tabnet"
+    }
+    "FTTransformer" = @{
+        Code = "import torch; import tab_transformer_pytorch"
+        Install = "python -m pip install torch tab-transformer-pytorch"
+    }
+    "SAINT" = @{
+        Code = "import torch"
+        Install = "python -m pip install torch"
+    }
+}
+if ($dependencyChecks.ContainsKey($Model)) {
+    $check = $dependencyChecks[$Model]
+    $savedErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "SilentlyContinue"
+    & python -c $check.Code 2>$null
+    $dependencyExitCode = $LASTEXITCODE
+    $ErrorActionPreference = $savedErrorActionPreference
+    if ($dependencyExitCode -ne 0) {
+        throw "Missing dependency for $Model. Install it first: $($check.Install)"
+    }
+}
+
 Write-Host "Running model: $Model" -ForegroundColor Cyan
 Write-Host "Datasets : $($datasets.Keys.Count) full registered datasets"
 Write-Host "Kernel   : $fixedKernel (fixed)"
@@ -127,4 +157,3 @@ $finalRows |
 
 Write-Host "`nDONE: $Model has $($finalRows.Count) rows in one CSV." -ForegroundColor Green
 Write-Host "Model CSV: $modelOutput" -ForegroundColor Cyan
-
