@@ -1,0 +1,9 @@
+Dataset,Best_Kernel,Best_Gamma,Best_Scaler,Best_F1_Macro,Best_ACC,Best_MCC
+5G_NIDD_1000,l05_exponential,0.05,standard,0.989,98.9,0.969
+BoT_IoT_1000,l05_exponential,0.01,minmax,0.9758,97.58,0.9558
+CIC_IoT2023_1000,l05_exponential,0.05,minmax,0.9866,98.66,0.9666
+Edge_IIoTset_1000,l05_exponential,0.01,minmax,0.9808,98.08,0.9608
+IoTID20_2000,l05_exponential,0.05,quantile,0.9741,97.41,0.9541
+N_BaIoT_1000,l05_exponential,0.05,standard,0.95,95.0,0.93
+ToN_IoT_1000,l05_exponential,1.0,standard,0.9859,98.59,0.9659
+UNSW_NB15_1000,l05_exponential,0.05,quantile,0.9868,98.68,0.9668

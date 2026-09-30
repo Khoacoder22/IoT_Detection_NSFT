@@ -17,7 +17,7 @@ from sklearn.metrics.pairwise import cosine_similarity, chi2_kernel # chi-kernel
 from sklearn.metrics.pairwise import pairwise_kernels as sk_pairwise
 
 SKLEARN_KERNELS = ("linear", "poly", "rbf", "sigmoid")
-CUSTOM_KERNELS = ("abel", "laplacian", "sobolev", "rff", "chi2", "l05_exponential_kernel")
+CUSTOM_KERNELS = ("abel", "laplacian", "sobolev", "rff", "chi2", "l05_exponential_kernel", "l_exponential_kernel")
 KERNEL_CHOICES = ("none", *SKLEARN_KERNELS, *CUSTOM_KERNELS)
 
 ABEL_ALPHA = 0.1
@@ -104,6 +104,30 @@ def l05_exponential_kernel(X, Y=None, gamma=None):
     alpha = float(gamma) if gamma is not None else 0.1
     return np.exp(-alpha * dist_l05)
 
+def l_exponential_kernel(
+       X, Y=None, l: float = 0.5, gamma: float | None = None
+   ):
+       X_arr = np.asarray(X, dtype=np.float64)
+       Y_arr = X_arr if Y is None else np.asarray(Y, dtype=np.float64)
+
+       n_samples_X, n_features = X_arr.shape
+       n_samples_Y = Y_arr.shape[0]
+
+       dist = np.zeros((n_samples_X, n_samples_Y), dtype=np.float64)
+       for j in range(n_features):
+           diff_j = np.abs(X_arr[:, j : j + 1] - Y_arr[:, j : j + 1].T)
+           if l == 0.25:
+               dist += np.sqrt(np.sqrt(diff_j))
+           elif l == 0.5:
+               dist += np.sqrt(diff_j)
+           elif l == 1.0:
+               dist += diff_j
+           else:
+               dist += diff_j**l
+
+       alpha = float(gamma) if gamma is not None else 0.01
+       return np.exp(-alpha * dist)
+
 def compute_kernel(
     X: np.ndarray,
     Y: np.ndarray | None = None,
@@ -141,4 +165,6 @@ def compute_kernel(
         return chi2_kernel(X_pos, Y_pos, gamma=gamma_val)
     if key == "l05_exponential_kernel":
         return l05_exponential_kernel(X, Y, gamma)
+    if key == "l_exponential_kernel":
+        return l_exponential_kernel(X, Y, l=l, gamma=gamma)
     raise ValueError(f"Unknown kernel '{kernel}'. Valid: {KERNEL_CHOICES}")

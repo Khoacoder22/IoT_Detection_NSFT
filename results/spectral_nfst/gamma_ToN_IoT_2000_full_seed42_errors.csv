@@ -1,0 +1,3 @@
+Dataset,Kernel,Gamma,Feature,Scaler,Q,Seed,Error
+ToN_IoT_2000,l05_exponential_kernel,heuristic,-1,QuantileTransformer,2,42,LinAlgError: SVD did not converge
+ToN_IoT_2000,l05_exponential_kernel,heuristic,0,QuantileTransformer,2,42,LinAlgError: SVD did not converge

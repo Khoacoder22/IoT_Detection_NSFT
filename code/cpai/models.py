@@ -278,7 +278,7 @@ class KNFST:
         return _softmax(-d, axis=1)
 
 
-# ------------------------------------------------------------- Spectral NFST
+# -------------------Spectral NFST
 
 def _component_counts(n_components, classes: np.ndarray, y: np.ndarray) -> np.ndarray:
     """Resolve scalar, sequence, or class-keyed component counts to class order."""
