@@ -77,3 +77,46 @@ Các cột:
 Rank, Model, Datasets, Runs, MCC_Mean, MCC_Std,
 F1_Mean, F1_Std, FPR_Mean, Train_s_Mean, Test_s_Mean
 ```
+
+## 4. Phân công chạy Spectral NFST theo gamma trên full data
+
+Thí nghiệm này giữ nguyên model `SpectralNFST` và chỉ chạy grid:
+
+- kernel cố định: `l05_exponential_kernel`;
+- 6 gamma: `heuristic`, `0.001`, `0.01`, `0.1`, `1`, `10`;
+- 2 cấu hình feature: `-1`, `0`;
+- chỉ dùng một seed cố định: `42`;
+- tổng cộng 12 cấu hình cho mỗi dataset;
+- luôn dùng full data, không giới hạn 100 mẫu/lớp.
+
+Lệnh terminal mẫu duy nhất:
+
+```powershell
+python code/tune_spectral_nfst.py --dataset BoT_IoT --limit 1000
+```
+
+Mỗi người thay tên dataset và limit theo bảng phân công:
+
+| Thành viên | Dataset 1 | Limit | Dataset 2 | Limit |
+|---|---|---:|---|---:|
+| Tài | `Edge_IIoTset` | 1000 | `BoT_IoT` | 1000 |
+| Hiếu | `ToN_IoT` | 2000 | `CIC_IoT2023` | 1000 |
+| Cường | `IoTID20` | 2000 | `N_BaIoT` | 1000 |
+| Khoa | `5G_NIDD` | 1000 | `UNSW_NB15` | 1000 |
+
+Mỗi người chạy lần lượt hai dataset được giao, không chạy hai job full-data song
+song trên cùng máy. Script mặc định full data và seed 42, không cần truyền thêm
+`--samples-per-class` hoặc `--seed`.
+
+Kết quả được lưu riêng theo dataset tại:
+
+```text
+results/spectral_nfst/gamma_<Dataset>_<Limit>_full_seed42.csv
+```
+
+Nếu tiến trình bị dừng, chạy lại đúng lệnh cũ. Script sẽ bỏ qua các cặp
+`feature × gamma` đã có trong CSV và tiếp tục phần còn thiếu.
+
+Nếu một cấu hình gặp lỗi số học như `SVD did not converge`, script ghi lỗi vào
+file `gamma_<Dataset>_<Limit>_full_seed42_errors.csv` rồi tiếp tục cấu hình
+kế tiếp; model `SpectralNFST` không bị sửa.
