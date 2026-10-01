@@ -1,0 +1,2 @@
+Dataset,Kernel,Gamma,Feature,Scaler,Q,Seed,Error
+UNSW_NB15_1000,l05_exponential_kernel,10,0,QuantileTransformer,2,42,LinAlgError: SVD did not converge
