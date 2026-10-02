@@ -100,7 +100,7 @@ Mỗi người thay tên dataset và limit theo bảng phân công:
 | Thành viên | Dataset 1 | Limit | Dataset 2 | Limit |
 |---|---|---:|---|---:|
 | Tài | `Edge_IIoTset` | 1000 | `BoT_IoT` | 1000 |
-| Hiếu | `ToN_IoT` | 2000 | `CIC_IoT2023` | 1000 |
+| Hiếu | `ToN_IoT` | 1000 | `CIC_IoT2023` | 1000 |
 | Cường | `IoTID20` | 2000 | `N_BaIoT` | 1000 |
 | Khoa | `5G_NIDD` | 1000 | `UNSW_NB15` | 1000 |
 
@@ -120,3 +120,39 @@ Nếu tiến trình bị dừng, chạy lại đúng lệnh cũ. Script sẽ b�
 Nếu một cấu hình gặp lỗi số học như `SVD did not converge`, script ghi lỗi vào
 file `gamma_<Dataset>_<Limit>_full_seed42_errors.csv` rồi tiếp tục cấu hình
 kế tiếp; model `SpectralNFST` không bị sửa.
+
+## 5. Chọn Q tốt nhất và so sánh với competitor
+
+Codebase đã có đủ kết quả để chọn riêng `gamma`, `feature` và `Q` tốt nhất cho
+cả 8 dataset. Tất cả cấu hình dùng `l05_exponential_kernel` và
+`QuantileTransformer`. Không chạy lại grid gamma hoặc grid Q. Cấu hình được tái
+sử dụng:
+
+| Dataset | Gamma | Feature | Q |
+|---|---:|---:|---:|
+| `BoT_IoT_1000` | 0.01 | -1 | 1 |
+| `CIC_IoT2023_1000` | 0.1 | -1 | 1 |
+| `ToN_IoT_1000` | 0.001 | 0 | 2 |
+| `UNSW_NB15_1000` | 0.1 | 0 | 2 |
+| `IoTID20_2000` | 0.01 | -1 | 2 |
+| `N_BaIoT_1000` | 0.01 | -1 | 1 |
+| `Edge_IIoTset_1000` | 0.1 | 0 | 5 |
+| `5G_NIDD_1000` | 0.01 | -1 | 1 |
+
+Chỉ cần một lệnh:
+
+```powershell
+python code/compare_spectral_nfst_competitors.py
+```
+
+Script tự đọc các CSV tuning cũ. Ba dataset có Q=2 tái sử dụng trực tiếp metric
+full-data từ vòng gamma; năm dataset còn lại chỉ chạy một cấu hình kết hợp cuối
+cùng. Kết quả final được cache nên chạy lại lệnh sẽ không train lại. Phần so
+sánh chỉ lấy seed 42, dùng đúng 8 biến thể dữ liệu giống competitor, và bỏ qua
+file `SpectralNFST.csv` cũ đang lỗi conflict. Kết quả chính:
+
+```text
+results/knfst_comparison/models/SpectralNFST_Tuned.csv
+results/knfst_comparison/seed42_spectral_tuned_all_models.csv
+results/knfst_comparison/seed42_spectral_tuned_ranking.csv
+```
