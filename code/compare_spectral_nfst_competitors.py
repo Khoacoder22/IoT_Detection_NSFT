@@ -277,6 +277,109 @@ def _competitor_rows(models_dir: Path) -> tuple[pd.DataFrame, list[str]]:
     return pd.concat(frames, ignore_index=True), excluded
 
 
+def _print_per_dataset_comparison(all_rows: pd.DataFrame) -> None:
+    """Print the tuned SpectralNFST parameters and full ranking per dataset."""
+    summary_rows = []
+    for dataset, limit in DATASETS:
+        data_type = f"{dataset}_{limit}"
+        rows = all_rows[all_rows["Data Type"] == data_type].copy()
+        rows = rows.sort_values(
+            ["MCC", "F1 Macro"], ascending=[False, False]
+        ).reset_index(drop=True)
+        rows.insert(0, "Rank", range(1, len(rows) + 1))
+
+        spectral_rows = rows[
+            rows["Comparison Model"] == "SpectralNFST-Tuned"
+        ]
+        if spectral_rows.empty:
+            print(f"\nDATASET: {data_type}\nNo SpectralNFST-Tuned result found.")
+            continue
+
+        spectral = spectral_rows.iloc[0]
+        spectral_rank = int(spectral["Rank"])
+        spectral_mcc = float(spectral["MCC"])
+        spectral_feature = int(float(spectral.get("Poly", -1)))
+        spectral_q = int(float(spectral.get("Q", 0)))
+        summary_rows.append({
+            "Dataset": data_type,
+            "Rank": f"{spectral_rank}/{len(rows)}",
+            "MCC": spectral_mcc,
+            "F1 Macro": float(spectral["F1 Macro"]),
+            "Gamma": spectral.get("Gamma", ""),
+            "Feature": spectral_feature,
+            "Q": spectral_q,
+            "Best Model": rows.iloc[0]["Comparison Model"],
+        })
+
+        display = rows[
+            [
+                "Rank", "Comparison Model", "MCC", "F1 Macro", "ACC", "FPR",
+                "Training time", "Test time",
+            ]
+        ].copy()
+        display["MCC vs Spectral"] = display["MCC"] - spectral_mcc
+        display["Comparison Model"] = display["Comparison Model"].map(
+            lambda model: (
+                f">>> {model} <<<"
+                if model == "SpectralNFST-Tuned"
+                else model
+            )
+        )
+        display = display.rename(columns={
+            "Comparison Model": "Model",
+            "Training time": "Train(s)",
+            "Test time": "Test(s)",
+        })
+        display = display[
+            [
+                "Rank", "Model", "MCC", "MCC vs Spectral", "F1 Macro", "ACC",
+                "FPR", "Train(s)", "Test(s)",
+            ]
+        ]
+
+        print("\n" + "=" * 118)
+        print(f"DATASET: {data_type}")
+        print(
+            "SpectralNFST-Tuned best parameters: "
+            f"gamma={spectral.get('Gamma', '')} | "
+            f"feature/poly={spectral_feature} | "
+            f"Q={spectral_q} | "
+            f"kernel={spectral.get('Kernel', '')} | "
+            f"scaler={spectral.get('SCALER', '')} | seed={int(spectral['Seed'])}"
+        )
+        print(
+            f"SpectralNFST-Tuned rank: {spectral_rank}/{len(rows)} | "
+            f"MCC={spectral_mcc:.6f} | F1 Macro={float(spectral['F1 Macro']):.2f}"
+        )
+        print("MCC vs Spectral: positive means the competitor is better; negative means worse.")
+        print(
+            display.to_string(
+                index=False,
+                formatters={
+                    "MCC": lambda value: f"{value:.6f}",
+                    "MCC vs Spectral": lambda value: f"{value:+.6f}",
+                    "F1 Macro": lambda value: f"{value:.2f}",
+                    "ACC": lambda value: f"{value:.2f}",
+                    "FPR": lambda value: f"{value:.2f}",
+                    "Train(s)": lambda value: f"{value:.3f}",
+                    "Test(s)": lambda value: f"{value:.4f}",
+                },
+            )
+        )
+
+    print("\n" + "=" * 118)
+    print("SPECTRAL NFST SUMMARY BY DATASET")
+    print(
+        pd.DataFrame(summary_rows).to_string(
+            index=False,
+            formatters={
+                "MCC": lambda value: f"{value:.6f}",
+                "F1 Macro": lambda value: f"{value:.2f}",
+            },
+        )
+    )
+
+
 def main() -> int:
     comparison_dir = RESULTS_DIR / "knfst_comparison"
     models_dir = comparison_dir / "models"
@@ -325,6 +428,7 @@ def main() -> int:
     with pd.option_context("display.max_columns", None, "display.width", 220):
         print("\nRanking by mean MCC across 8 datasets (seed 42):")
         print(ranking.to_string(index=False, float_format=lambda value: f"{value:.6f}"))
+    _print_per_dataset_comparison(all_rows)
     print(f"\nTuned SpectralNFST: {tuned_path}")
     print(f"All comparison rows: {all_rows_path}")
     print(f"Ranking: {ranking_path}")
